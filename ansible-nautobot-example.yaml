@@ -1,0 +1,38 @@
+---
+- name: Generate policy-option block from nautobot config contexts
+  hosts: junos
+  connection: netconf
+  gather_facts: false
+
+  vars:
+    nautobot_token: "{{ lookup('env', 'NAUTOBOT_TOKEN') }}"
+
+  tasks:
+    - name: Build GraphQL query
+      ansible.builtin.set_fact:
+        query_string: |
+          query {
+            devices (name__ic: "{{ inventory_hostname }}") {
+              name
+              serial
+              tenant {
+                name
+              }
+              location {
+                name
+              }
+            }
+          }
+
+    - name: Run GraphQL query against source of truth
+      networktocode.nautobot.query_graphql:
+        url: https://nautobot.example.com
+        token: "{{ nautobot_token }}"
+        query: "{{ query_string }}"
+        api_version: "1.2"
+        update_hostvars: true
+      register: nautobot
+
+    - name: Print nautobot response
+      ansible.builtin.debug:
+        var: nautobot
