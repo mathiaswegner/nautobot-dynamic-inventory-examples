@@ -3,6 +3,7 @@
 
 import argparse
 import getpass
+import os
 import sys
 
 import napalm  # type: ignore
@@ -56,7 +57,14 @@ def show_device_details(device, username, password):
     # Get the napalm driver name for the device's platform
     # Not only can the device be treated as an object, but you can access
     # the platform object from the device as well.
-    napalm_driver = device.platform.network_driver_mappings["napalm"]
+    try:
+        napalm_driver = device.platform.network_driver_mappings["napalm"]
+    except KeyError:
+        print(f"Driver not found for {device.platform}")
+        return
+    except AttributeError:
+        print(f"Platform not set for {device.name}")
+        return
     print(f"Napalm driver for platform: {napalm_driver}")
     # get the napalm driver for this device type
     driver = napalm.get_network_driver(napalm_driver)
@@ -111,7 +119,7 @@ def main(args):
     parser.add_argument(
         "-u",
         "--url",
-        required=True,
+        required=False,
         help="Nautobot URL",
     )
     parser.add_argument(
@@ -127,8 +135,14 @@ def main(args):
         help="Device username",
     )
     args = parser.parse_args()
+    if not args.url:
+        args.url = os.getenv("NAUTOBOT_URL")
+    if not args.url:
+        args.url = input("Enter the Nautobot URL: ")
 
-    token = getpass.getpass("Enter your Nautobot API token: ")
+    token = os.getenv("NAUTOBOT_TOKEN")
+    if not token:
+        token = getpass.getpass("Enter your Nautobot API token: ")
     password = getpass.getpass(f"Enter the password for {args.username}: ")
 
     # Create the Nautobot API object
@@ -138,7 +152,7 @@ def main(args):
         print("Unable to connect to Nautobot")
         sys.exit(1)
     else:
-        print(f"{nautobot.status()}")
+        print(f"Nautobot version {nautobot.status().get('nautobot-version')}")
 
     print(f"Limit argument: {args.limit}")
     limit = build_filter_params(filter_params=args.limit.split(","), params={})

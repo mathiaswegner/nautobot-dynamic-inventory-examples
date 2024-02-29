@@ -6,7 +6,7 @@
 # https://nautobot.readthedocs.io/en/latest/api/overview/
 #
 plugin: networktocode.nautobot.inventory
-api_endpoint: https://nautobot.example.com
+# api_endpoint: https://nautobot.example.com  # or NAUTOBOT_URL environment variable
 
 # set the network_os based on the network_driver attribute in Nautobot
 compose:

@@ -6,6 +6,7 @@
 
   vars:
     nautobot_token: "{{ lookup('env', 'NAUTOBOT_TOKEN') }}"
+    nautobot_url: "{{ lookup('env', 'NAUTOBOT_URL') }}"
 
   tasks:
     - name: Build GraphQL query
@@ -26,7 +27,7 @@
 
     - name: Run GraphQL query against source of truth
       networktocode.nautobot.query_graphql:
-        url: https://nautobot.example.com
+        url: "{{ nautobot_url }}"
         token: "{{ nautobot_token }}"
         query: "{{ query_string }}"
         api_version: "1.2"
